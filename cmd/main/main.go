@@ -8,9 +8,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	//swaggerfiles "github.com/swaggo/files"
-	//ginSwagger "github.com/swaggo/gin-swagger"
+	swaggerFiles "github.com/swaggo/files"
+	swagger "github.com/swaggo/gin-swagger"
 
+	_ "github.com/romanchechyotkin/betera-test-task/docs"
 	"github.com/romanchechyotkin/betera-test-task/pkg/logger"
 	"github.com/romanchechyotkin/betera-test-task/pkg/minio"
 	"github.com/romanchechyotkin/betera-test-task/pkg/postgresql"
@@ -44,7 +45,11 @@ func main() {
 
 	go everyMinute()
 
-	err := http.ListenAndServe(":8080", nil)
+	engine := gin.Default()
+	engine.GET("/swagger/*any", swagger.WrapHandler(swaggerFiles.Handler))
+	engine.GET("/health", health)
+
+	err := engine.Run(":8080")
 	if err != nil {
 		logger.Error(log, "http server init failed", err)
 		os.Exit(1)

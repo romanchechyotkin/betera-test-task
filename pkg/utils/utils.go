@@ -5,5 +5,5 @@ import (
 )
 
 func CleanTmp() error {
-	return os.Remove("tmp/img.jpg")
+	return os.Remove("tmp.jpg")
 }

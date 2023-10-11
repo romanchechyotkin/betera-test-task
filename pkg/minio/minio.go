@@ -13,17 +13,11 @@ import (
 )
 
 func New(log *slog.Logger) *minio.Client {
-	//host := os.Getenv("MINIO_HOST")
-	//port := os.Getenv("MINIO_PORT")
-	//accessKeyID := os.Getenv("MINIO_ACCESS_KEY")
-	//secretAccessKey := os.Getenv("MINIO_SECRET_KEY")
-	//bucketName := os.Getenv("MINIO_BUCKET_NAME")
-
-	host := "localhost"
-	port := "9000"
-	accessKeyID := "p2hVVCLRaaxzMsIdEZBC"
-	secretAccessKey := "EnnCxVNoekNmsokLY3A8d6t2sjl0ex08jr5Irwxs"
-	bucketName := "betera"
+	host := os.Getenv("MINIO_HOST")
+	port := os.Getenv("MINIO_PORT")
+	accessKeyID := os.Getenv("MINIO_ACCESS_KEY")
+	secretAccessKey := os.Getenv("MINIO_SECRET_KEY")
+	bucketName := os.Getenv("MINIO_BUCKET_NAME")
 
 	endpoint := fmt.Sprintf("%s:%s", host, port)
 	minioClient, err := minio.New(endpoint, &minio.Options{

@@ -38,7 +38,7 @@ func newHandler(logger *slog.Logger, repo storage, minioClient *minio.Client) *h
 		minioClient: minioClient,
 	}
 
-	//go h.parseMetadata()
+	go h.parseMetadata()
 
 	return h
 }
@@ -82,12 +82,14 @@ func (h *handler) parseMetadata() {
 			resp, err := http.Get("https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY")
 			if err != nil {
 				logger.Error(h.log, "error during request to NASA API", err)
+				return
 			}
 
 			var dto Metadata
 			err = json.NewDecoder(resp.Body).Decode(&dto)
 			if err != nil {
 				logger.Error(h.log, "error during json decoding", err)
+				return
 			}
 
 			h.log.Info("got response", slog.Any("metadata", dto))
@@ -99,36 +101,42 @@ func (h *handler) parseMetadata() {
 			resp, err = http.Get(dto.URL)
 			if err != nil {
 				logger.Error(h.log, "error during request to get image", err)
+				return
 			}
 
-			file, err := os.Create("tmp/img.jpg")
+			file, err := os.Create("tmp.jpg")
 			if err != nil {
 				logger.Error(h.log, "failed to create image file", err)
+				return
 			}
 			defer file.Close()
 
 			_, err = io.Copy(file, resp.Body)
 			if err != nil {
 				logger.Error(h.log, "failed to create image file", err)
+				return
 			}
 
 			fileName := uuid.New().String() + ".jpg"
 
-			err = h.saveToMinio(context.Background(), h.minioClient, fileName, "tmp/img.jpg")
+			err = h.saveToMinio(context.Background(), h.minioClient, fileName, "tmp.jpg")
 			if err != nil {
 				logger.Error(h.log, "error during saving to minio", err)
+				return
 			}
 
 			dto.URL = fileName
 
 			err = h.repository.saveAPOD(context.Background(), &dto)
 			if err != nil {
-				logger.Error(h.log, "error during json decoding", err)
+				logger.Error(h.log, "error during saving apod to database", err)
+				return
 			}
 
 			err = utils.CleanTmp()
 			if err != nil {
 				logger.Error(h.log, "error during cleaning tmp dir", err)
+				return
 			}
 		}
 	}

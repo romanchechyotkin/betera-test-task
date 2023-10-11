@@ -28,7 +28,7 @@ services:
       context: ./pkg/postgresql
     restart: always
     ports:
-      - "5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "5432"
@@ -46,8 +46,8 @@ services:
     environment:
       MINIO_HOST: "minio"
       MINIO_PORT: "9000"
-      MINIO_ACCESS_KEY: "p2hVVCLRaaxzMsIdEZBC"
-      MINIO_SECRET_KEY: "EnnCxVNoekNmsokLY3A8d6t2sjl0ex08jr5Irwxs"
+      MINIO_ACCESS_KEY: "FUszpbQU8qSx1lNEM2Yw"
+      MINIO_SECRET_KEY: "gOeqwnGKwzcsnx19h0RogHp8zxfncqjP44zwDHIQ"
       MINIO_BUCKET_NAME: "betera"
       POSTGRES_HOST: "postgres"
       POSTGRES_PORT: "5432"

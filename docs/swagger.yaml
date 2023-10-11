@@ -1,5 +1,9 @@
+host: localhost:8080
 info:
   contact: {}
+  description: Betera test task in Gin Framework
+  title: Swagger Documentation
+  version: "1.0"
 paths:
   /health:
     get:
@@ -12,4 +16,15 @@ paths:
           schema:
             type: string
       summary: Health Check
+  /nasa/health:
+    get:
+      description: Checking health of nasa endpoint
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Nasa Endpoint Health Check
 swagger: "2.0"

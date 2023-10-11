@@ -31,18 +31,35 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/nasa/health": {
+            "get": {
+                "description": "Checking health of nasa endpoint",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Nasa Endpoint Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Swagger Documentation",
+	Description:      "Betera test task in Gin Framework",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

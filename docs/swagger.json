@@ -1,8 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "Betera test task in Gin Framework",
+        "title": "Swagger Documentation",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8080",
     "paths": {
         "/health": {
             "get": {
@@ -11,6 +15,23 @@
                     "application/json"
                 ],
                 "summary": "Health Check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/nasa/health": {
+            "get": {
+                "description": "Checking health of nasa endpoint",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Nasa Endpoint Health Check",
                 "responses": {
                     "200": {
                         "description": "OK",

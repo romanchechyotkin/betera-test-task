@@ -32,6 +32,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/nasa": {
+            "get": {
+                "description": "Endpoint for getting the whole album",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "The whole album",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/nasa.Metadata"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/nasa/health": {
             "get": {
                 "description": "Checking health of nasa endpoint",
@@ -46,6 +66,57 @@ const docTemplate = `{
                             "type": "string"
                         }
                     }
+                }
+            }
+        },
+        "/nasa/{date}": {
+            "get": {
+                "description": "Endpoint for getting the APOD with exact date",
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "The exact APOD",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Date",
+                        "name": "date",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/nasa.Metadata"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "nasa.Metadata": {
+            "type": "object",
+            "properties": {
+                "date": {
+                    "type": "string"
+                },
+                "explanation": {
+                    "type": "string"
+                },
+                "media_type": {
+                    "type": "string"
+                },
+                "service_version": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         }

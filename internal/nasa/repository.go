@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/romanchechyotkin/betera-test-task/pkg/logger"
@@ -60,14 +62,44 @@ func (r *repository) getAllAPODs(ctx context.Context) ([]*Metadata, error) {
 	for rows.Next() {
 		var m Metadata
 
-		err = rows.Scan(&m.Title, &m.Explanation, &m.URL, &m.MediaType, &m.ServiceVersion, &m.Date)
+		var timestamp time.Time
+		err = rows.Scan(&m.Title, &m.Explanation, &m.URL, &m.MediaType, &m.ServiceVersion, &timestamp)
 		if err != nil {
 			logger.Error(r.log, "error during scanning", err)
 			return nil, err
 		}
 
+		m.URL = "http://localhost:9000/betera/" + m.URL
+		m.Date = timestamp.String()
 		res = append(res, &m)
 	}
 
 	return res, nil
+}
+
+func (r *repository) getAPOD(ctx context.Context, date string) (*Metadata, error) {
+	query := `
+		SELECT title, explanation, image, media_type, service_version, date 
+		FROM apods
+		WHERE date = $1
+	`
+
+	var m Metadata
+	var timestamp time.Time
+
+	r.log.Info("database query", slog.String("query", postgresql.FormatQuery(query)))
+	err := r.pool.QueryRow(ctx, query, date).Scan(&m.Title, &m.Explanation, &m.URL, &m.MediaType, &m.ServiceVersion, &timestamp)
+	if err != nil {
+		logger.Error(r.log, "error during scanning", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		} else {
+			return nil, err
+		}
+	}
+
+	m.URL = "http://localhost:9000/betera/" + m.URL
+	m.Date = timestamp.String()
+
+	return &m, nil
 }

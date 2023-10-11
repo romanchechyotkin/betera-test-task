@@ -22,6 +22,7 @@ import (
 type storage interface {
 	saveAPOD(ctx context.Context, dto *Metadata) error
 	getAllAPODs(ctx context.Context) ([]*Metadata, error)
+	getAPOD(ctx context.Context, date string) (*Metadata, error)
 }
 
 type handler struct {
@@ -37,7 +38,7 @@ func newHandler(logger *slog.Logger, repo storage, minioClient *minio.Client) *h
 		minioClient: minioClient,
 	}
 
-	go h.parseMetadata()
+	//go h.parseMetadata()
 
 	return h
 }
@@ -46,9 +47,15 @@ func (h *handler) RegisterRoutes(engine *gin.Engine) {
 	group := engine.Group("/nasa")
 
 	group.GET("/", h.getAllAPODs)
+	group.GET("/:date", h.getAPOD)
 	group.GET("/health", h.index)
 }
 
+// @Summary The whole album
+// @Description Endpoint for getting the whole album
+// @Produce application/json
+// @Success 200 {object} []Metadata{}
+// @Router /nasa [get]
 func (h *handler) getAllAPODs(ctx *gin.Context) {
 	apods, err := h.repository.getAllAPODs(ctx)
 	if err != nil {
@@ -68,12 +75,11 @@ func (h *handler) getAllAPODs(ctx *gin.Context) {
 }
 
 func (h *handler) parseMetadata() {
-	ticker := time.NewTicker(time.Second * 5)
-	day := 11
+	ticker := time.NewTicker(time.Hour * 24)
 	for {
 		select {
 		case <-ticker.C:
-			resp, err := http.Get(fmt.Sprintf("https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&date=2023-10-%d", day))
+			resp, err := http.Get("https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY")
 			if err != nil {
 				logger.Error(h.log, "error during request to NASA API", err)
 			}
@@ -85,6 +91,10 @@ func (h *handler) parseMetadata() {
 			}
 
 			h.log.Info("got response", slog.Any("metadata", dto))
+			if dto.URL == "" {
+				logger.Error(h.log, "empty url", nil)
+				return
+			}
 
 			resp, err = http.Get(dto.URL)
 			if err != nil {
@@ -120,9 +130,45 @@ func (h *handler) parseMetadata() {
 			if err != nil {
 				logger.Error(h.log, "error during cleaning tmp dir", err)
 			}
-			day = day - 1
 		}
 	}
+}
+
+// @Summary Nasa Endpoint Health Check
+// @Description Checking health of nasa endpoint
+// @Produce application/json
+// @Success 200 {string} nasa
+// @Router /nasa/health [get]
+func (h *handler) index(ctx *gin.Context) {
+	ctx.String(http.StatusOK, "nasa")
+}
+
+// @Summary The exact APOD
+// @Description Endpoint for getting the APOD with exact date
+// @Produce application/json
+// @Success 200 {object} Metadata
+// @Param date path string true "Date"
+// @Router /nasa/{date} [get]
+func (h *handler) getAPOD(ctx *gin.Context) {
+	date := ctx.Param("date")
+	h.log.Info("got date param", slog.String("date", date))
+
+	apod, err := h.repository.getAPOD(ctx, date)
+	if err != nil {
+		logger.Error(h.log, "error during db query", err)
+		if errors.Is(err, ErrNotFound) {
+			ctx.JSON(http.StatusNotFound, gin.H{
+				"error": err.Error(),
+			})
+		} else {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, apod)
 }
 
 func (h *handler) saveToMinio(ctx context.Context, client *minio.Client, fileName, filePath string) error {
@@ -134,13 +180,4 @@ func (h *handler) saveToMinio(ctx context.Context, client *minio.Client, fileNam
 	h.log.Info("image successfully uploaded", slog.String("info", fmt.Sprintf("%s of size %d", fileName, info.Size)))
 
 	return nil
-}
-
-// @Summary Nasa Endpoint Health Check
-// @Description Checking health of nasa endpoint
-// @Produce application/json
-// @Success 200 {string} nasa
-// @Router /nasa/health [get]
-func (h *handler) index(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "nasa")
 }
